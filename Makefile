@@ -3,4 +3,3 @@ build:
 
 run: build
 	@./cmd/main
-
