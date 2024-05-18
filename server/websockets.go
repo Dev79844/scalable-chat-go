@@ -20,7 +20,6 @@ type Message struct{
 }
 
 var clients = make(map[*websocket.Conn]bool)
-var broadcast = make(chan Message)
 
 func handleConnections(w http.ResponseWriter, r *http.Request){
     conn, err := upgrader.Upgrade(w,r, nil)
@@ -66,28 +65,12 @@ func handleConnections(w http.ResponseWriter, r *http.Request){
     }
 }
 
-func handleMessages(){
-    for {
-     msg := <-broadcast
-   
-     for client := range clients {
-      err := client.WriteJSON(msg)
-      if err != nil {
-       fmt.Println(err)
-       client.Close()
-       delete(clients, client)
-      }
-     }
-    }
-   }
 
 func StartWebSocketServer() {
     redisClient := pubsub.InitialiseRedis()
     defer redisClient.Close()
 
     http.HandleFunc("/ws", handleConnections)
-
-    go handleMessages()
 
     log.Println("Starting WebSocket server on :8081")
     err := http.ListenAndServe(":8081", nil)
